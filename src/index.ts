@@ -29,6 +29,9 @@ export interface Env {
     ATTACHMENT_UPLOAD_HANDLER: DurableObjectNamespace;
 
     BACKUP_UPLOAD_HANDLER: DurableObjectNamespace;
+
+    /** Comma-separated allowed origins, or '*' for open. If unset, defaults to '*'. */
+    CORS_ORIGINS?: string;
 }
 
 const ATTACHMENT_PREFIX = 'attachments';
@@ -117,19 +120,67 @@ router
 
     .all('*', () => error(404));
 
+function getCorsOrigin(request: Request, env: Env): string | null {
+    const origin = request.headers.get('Origin');
+    if (!origin) return null;
+
+    const allowed = env.CORS_ORIGINS?.trim();
+    if (!allowed || allowed === '*') return origin;
+
+    const list = allowed.split(',').map(o => o.trim()).filter(Boolean);
+    return list.includes(origin) ? origin : null;
+}
+
+function corsHeaders(origin: string): Record<string, string> {
+    return {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, OPTIONS',
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type, Upload-Length, Upload-Offset, Upload-Metadata, Tus-Resumable, Upload-Concat',
+        'Access-Control-Expose-Headers': 'Upload-Offset, Upload-Length, Tus-Resumable, Tus-Version, Tus-Extension, Upload-Expires, Location',
+        'Access-Control-Max-Age': '86400',
+    };
+}
+
 export default {
     async fetch(
         request: Request,
         env: Env,
         ctx: ExecutionContext
     ): Promise<Response> {
-        return router.fetch(request, env, ctx).catch(e => {
+        const corsOrigin = getCorsOrigin(request, env);
+
+        // Handle CORS preflight — include tus capability headers
+        if (request.method === 'OPTIONS' && corsOrigin) {
+            return new Response(null, {status: 204, headers: {
+                ...corsHeaders(corsOrigin),
+                'Tus-Resumable': TUS_VERSION,
+                'Tus-Version': TUS_VERSION,
+                'Tus-Extension': 'creation,creation-defer-length,creation-with-upload,expiration',
+            }});
+        }
+
+        const raw = await router.fetch(request, env, ctx).catch(e => {
             console.log(`error processing ${request.method}:${request.url}: ${e.stack}`);
             if (e instanceof StatusError) {
                 return error(e);
             }
             throw e;
         }).then(json);
+
+        // Clone response so headers are mutable, then attach CORS headers
+        if (corsOrigin) {
+            const response = new Response(raw.body, {
+                status: raw.status,
+                statusText: raw.statusText,
+                headers: new Headers(raw.headers),
+            });
+            const cors = corsHeaders(corsOrigin);
+            for (const [key, value] of Object.entries(cors)) {
+                response.headers.set(key, value);
+            }
+            return response;
+        }
+        return raw;
     }
 };
 

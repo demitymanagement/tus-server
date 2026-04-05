@@ -19,17 +19,33 @@ durable_objects.bindings = [
 tag = "v1"
 new_sqlite_classes = ["AttachmentUploadHandler", "BackupUploadHandler"]
 
+[vars]
+CORS_ORIGINS = "*"
+
 [env.production]
 name = "demity-tus"
 routes = [{ pattern = "uploads.demity.app", custom_domain = true }]
-durable_objects.bindings = [
-    { name = "ATTACHMENT_UPLOAD_HANDLER", class_name = "AttachmentUploadHandler" },
-    { name = "BACKUP_UPLOAD_HANDLER", class_name = "BackupUploadHandler" }
-]
-r2_buckets = [
-    { binding = "ATTACHMENT_BUCKET", bucket_name = "demity-uploads", preview_bucket_name = "demity-uploads" },
-    { binding = "BACKUP_BUCKET", bucket_name = "demity-backups", preview_bucket_name = "demity-backups" }
-]
+
+[env.production.vars]
+CORS_ORIGINS = "https://demity.app,https://www.demity.app"
+
+[[env.production.r2_buckets]]
+binding = "ATTACHMENT_BUCKET"
+bucket_name = "demity-uploads"
+preview_bucket_name = "demity-uploads"
+
+[[env.production.r2_buckets]]
+binding = "BACKUP_BUCKET"
+bucket_name = "demity-backups"
+preview_bucket_name = "demity-backups"
+
+[[env.production.durable_objects.bindings]]
+name = "ATTACHMENT_UPLOAD_HANDLER"
+class_name = "AttachmentUploadHandler"
+
+[[env.production.durable_objects.bindings]]
+name = "BACKUP_UPLOAD_HANDLER"
+class_name = "BackupUploadHandler"
 
 # To set an auth secret,
 # wrangler secret put SHARED_AUTH_SECRET
