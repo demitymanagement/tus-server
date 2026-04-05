@@ -2,7 +2,7 @@ name = "demity-tus-dev"
 main = "src/index.ts"
 compatibility_date = "2023-05-10"
 compatibility_flags = ["nodejs_compat"]
-logpush = true
+# logpush = true  # requires Enterprise plan
 
 r2_buckets = [
     { binding = "ATTACHMENT_BUCKET", bucket_name = "demity-uploads-dev", preview_bucket_name = "demity-uploads-dev" },
