@@ -27,17 +27,16 @@ CORS_ORIGINS = "*"
 
 [env.production]
 name = "demity-tus"
-# Dual-homed: uploads.domot.ai is the new canonical host, uploads.demity.app
-# stays until every deployed client has been repointed off it.
+# uploads.domot.ai is the canonical host for new uploads. uploads.demity.app
+# MUST stay served: attachment `file_url` values already persisted in D1 are
+# absolute URLs on that host, so retiring it would 404 every existing file.
 routes = [
     { pattern = "uploads.domot.ai", custom_domain = true },
     { pattern = "uploads.demity.app", custom_domain = true },
 ]
 
 [env.production.vars]
-# domot.ai origins first; the demity.app entries stay only while the old
-# domain is still served, and can go once that route is retired.
-CORS_ORIGINS = "https://app.domot.ai,https://domot.ai,https://demity.app,https://www.demity.app"
+CORS_ORIGINS = "https://app.domot.ai,https://domot.ai"
 
 [[env.production.r2_buckets]]
 binding = "ATTACHMENT_BUCKET"
