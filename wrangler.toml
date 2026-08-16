@@ -4,10 +4,7 @@ main = "src/index.ts"
 compatibility_date = "2023-05-10"
 compatibility_flags = ["nodejs_compat"]
 # logpush = true  # requires Enterprise plan
-routes = [
-    { pattern = "dev-uploads.domot.ai", custom_domain = true },
-    { pattern = "dev-uploads.demity.app", custom_domain = true },
-]
+routes = [{ pattern = "dev-uploads.domot.ai", custom_domain = true }]
 
 r2_buckets = [
     { binding = "ATTACHMENT_BUCKET", bucket_name = "demity-uploads-dev", preview_bucket_name = "demity-uploads-dev" },
@@ -28,13 +25,7 @@ CORS_ORIGINS = "*"
 
 [env.production]
 name = "demity-tus"
-# uploads.domot.ai is the canonical host for new uploads. uploads.demity.app
-# MUST stay served: attachment `file_url` values already persisted in D1 are
-# absolute URLs on that host, so retiring it would 404 every existing file.
-routes = [
-    { pattern = "uploads.domot.ai", custom_domain = true },
-    { pattern = "uploads.demity.app", custom_domain = true },
-]
+routes = [{ pattern = "uploads.domot.ai", custom_domain = true }]
 
 [env.production.vars]
 CORS_ORIGINS = "https://app.domot.ai,https://domot.ai"
