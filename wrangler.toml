@@ -1,4 +1,5 @@
 name = "demity-tus-dev"
+account_id = "dc901a0d942ad2d4dfa1f7fabe67a0b4"
 main = "src/index.ts"
 compatibility_date = "2023-05-10"
 compatibility_flags = ["nodejs_compat"]
